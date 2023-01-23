@@ -131,3 +131,41 @@ class UploadController
 }
 ```
 
+First, check if there is a file request.
+Next, collect to the file, and define its file name.
+
+```
+$file = $request->file('upload');
+$name = $file->getClientOriginalName();
+```
+
+I'll use a slug to rename the file name.
+
+```
+$name = Str::slug($name);
+```
+
+Next, I use [Intervention](https://image.intervention.io/v2) package to use its Image class to make the image and stream it.
+
+```
+$img = Image::make($file);
+$img->stream();
+```
+
+Next remove any unwanted text from the file name
+
+```
+$name = str_replace('png', '', $name).'.png';
+```
+
+Then save the image
+
+```
+Storage::disk('images')->put('posts/'.$name, $img);
+```
+
+Finally, return the image path so Ckeditor can load the image into the textarea
+
+```
+return response()->json([ 'url' => "/images/posts/$name" ]);
+```
