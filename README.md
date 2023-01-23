@@ -78,4 +78,56 @@ The component looks like this:
 @enderror
 ```
 
+the important part is:
+
+```
+simpleUpload: {
+    uploadUrl: '{{ url('admin/image-upload') }}'
+}
+```
+
+This tells Ckeditor where to upload files to.
+
+My route is defined inside an auth group so you have to be authenticated in order to use the upload route.
+
+```
+Route::middleware(['web', 'auth'])->group(function () {
+    //other routes
+    Route::post('admin/image-upload', [UploadController::class, 'index']);
+});
+```
+
+Next create an UploadController:
+
+```
+<?php namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Facades\Image;
+
+class UploadController
+{
+    public function index(Request $request)
+    {
+        if ($request->hasFile('upload')) {
+
+            $file = $request->file('upload');
+            $name = $file->getClientOriginalName();
+            $name = Str::slug($name);
+            $img  = Image::make($file);
+            $img->stream();
+            $name = str_replace('png', '', $name).'.png';
+
+            Storage::disk('images')->put('posts/'.$name, $img);
+
+            return response()->json([
+                'url' => "/images/posts/$name"
+            ]);
+
+        }
+    }
+}
+```
 
